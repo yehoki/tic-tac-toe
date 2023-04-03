@@ -17,16 +17,27 @@ and in turn which creates event listeners, dictates who's turn it is and so on.
 // gameBoard module
 
 const gameBoard = (() => {
-    const game = () => [[0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0]];
+
+    const rows = 3;
+    const cols = 3;
+    const board = [];
+
+    // create the gameboard as a 2d array of 0's to begin with
+    for (let i = 0; i < rows; i++) {
+        board[i] = [];
+        for (let j = 0; j < cols; j++) {
+            board[i].push(0);
+        }
+    }
+    
+    // retrieving the board itself
+    const getBoard = () => board;
     return {
-        game
+        getBoard
     };
 })();
 
-console.log(gameBoard.game());
-
+console.log(gameBoard.getBoard());
 
 
 // displayController module
@@ -34,3 +45,14 @@ console.log(gameBoard.game());
 const displayController = (() => {
     const display = 0;
 })();
+
+
+// players factory
+
+const Person = (name) => {
+    const sayName = () => console.log(`The name: ${name}`);
+    return {sayName};
+}
+
+const newName = Person('newName');
+newName.sayName();
