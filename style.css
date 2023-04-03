@@ -32,11 +32,11 @@ main {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     align-items: center;
-    padding: 4rem;
+    padding: 6rem;
 }
 
 .entry {
-    height: 150px;
+    min-height: 100px;
 }
 
 footer {   
