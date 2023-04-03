@@ -47,21 +47,24 @@ const gameBoard = (() => {
   const rows = 3;
   const cols = 3;
   const board = [];
-
   // create the gameboard as a 2d array of 0's to begin with
-  for (let i = 0; i < rows; i++) {
-    board[i] = [];
-    for (let j = 0; j < cols; j++) {
-      board[i].push(entry());
+  const createBoard = () => {
+    for (let i = 0; i < rows; i++) {
+      board[i] = [];
+      for (let j = 0; j < cols; j++) {
+        board[i].push(entry());
+      }
     }
-  }
+  };
+  createBoard();
 
+  // Used to console log the board
   const printBoard = () => {
     const printed = board.map((row) => row.map((cell) => cell.getValue()));
     console.log(printed, "printed");
   };
 
-  // gets an array of all valid moves
+  // returns an array of all valid moves in the form [column, row]
   const checkValidMoves = () => {
     const validMoves = [];
     board.forEach((row, rowIndex) =>
@@ -87,18 +90,17 @@ const gameBoard = (() => {
 
   // retrieving the board itself
   const getBoard = () => board;
+
   return {
     getBoard,
     printBoard,
-    checkValidMoves,
     isValidMove,
-    checkValidMoves,
     addEntry,
+    createBoard,
   };
 })();
 
 gameBoard.printBoard();
-console.log(gameBoard.checkValidMoves(), "check move");
 
 console.log(gameBoard.isValidMove([0, 2]), "check moveeee");
 
@@ -132,7 +134,8 @@ const gameController = ((
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
   };
 
-  //   const makeNewRound = () => {};
+  // makes a new round
+  const makeNewRound = () => {};
 
   return {
     getCurrentPlayer,
@@ -148,10 +151,10 @@ const gameController = ((
 const screenController = (() => {
   const board = gameBoard.getBoard();
   const boardGrid = document.querySelector(".game-board");
-  const main = document.querySelector('main');
-  const turnMessage = document.createElement('p');
+  const restartButton = document.querySelector("#restart");
+  const main = document.querySelector("main");
+  const turnMessage = document.createElement("p");
   main.appendChild(turnMessage);
-  
 
   const getEntry = (value) => {
     return value === 0 ? "" : toEntry(value);
@@ -174,7 +177,9 @@ const screenController = (() => {
         console.log(col.getValue(), col.getValue() === 0);
       });
     });
-    turnMessage.textContent = `It is ${gameController.getCurrentPlayer().name}'s turn.`;
+    turnMessage.textContent = `It is ${
+      gameController.getCurrentPlayer().name
+    }'s turn.`;
   };
 
   const handleGridClick = (e) => {
@@ -182,13 +187,6 @@ const screenController = (() => {
     const colIndex = e.target.dataset.column;
 
     if (!rowIndex || !colIndex) return;
-    console.log(
-      gameBoard.isValidMove([rowIndex, colIndex]),
-      "check",
-      rowIndex,
-      colIndex,
-      gameBoard.checkValidMoves()
-    );
     if (gameBoard.isValidMove([rowIndex, colIndex])) {
       console.log(gameController.getCurrentPlayer());
       gameBoard.addEntry(
@@ -199,18 +197,24 @@ const screenController = (() => {
       makeBoard();
       // change the value on the button;
     } else {
-        alert('This is not a valid input!');
+      alert("This is not a valid input!");
     }
     //Functionality here what happens after button press
   };
 
+  // handling when the restart button is pressed
+  const handleRestart = (e) => {
+    gameBoard.createBoard();
+  };
+
   boardGrid.addEventListener("click", handleGridClick);
+  restartButton.addEventListener("click", handleRestart);
 
   console.log(board, "screenControl");
 
   return {
-    makeBoard
-  }
+    makeBoard,
+  };
 })();
 
 screenController.makeBoard();
