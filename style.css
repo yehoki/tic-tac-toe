@@ -15,14 +15,29 @@ body {
     height: 100dvh;
 }
 
-main {
-    flex: auto;
+header {
+    text-align: center;
 }
 
+main {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
 
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    align-items: center;
+    padding: 4rem;
+}
 
-
-
+.entry {
+    height: 150px;
+}
 
 footer {   
     min-height: 50px;
