@@ -9,12 +9,18 @@
     <title>Tic-Tac-Toe</title>
   </head>
   <body>
-    <header>Tic-Tac-Toe</header>
-    <main>Main
-        <div class="game-board">
+    <header><h1>Tic-Tac-Toe</h1></header>
+    <main>
+      <div class="buttons">
+        <div class="name-input">
+          <label for="player-name">Player name:</label>
+          <input name="player-name" id="player-name" type="text" />
+          <button class="enter-name" id="begin-button">Start</button>
         </div>
-        <button id="restart">Restart</button>
-        <div class="ending-message"></div>
+        <button id="new-game" class="showing on">New Game</button>
+        <button id="restart" class="showing on">Restart</button>
+      </div>
+      <div class="ending-message"></div>
     </main>
     <footer>
       <p>Copyright © 2023 yehoki</p>

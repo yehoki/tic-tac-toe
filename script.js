@@ -130,22 +130,9 @@ const gameBoard = (() => {
 // gameController module
 //------------------------------------------------------------------------------------------------------
 
-const gameController = ((
-  playerOne = "Player One",
-  playerTwo = "Player Two"
-) => {
-  const players = [
-    {
-      name: playerOne,
-      entryValue: 1,
-      moves: [],
-    },
-    {
-      name: playerTwo,
-      entryValue: 2,
-      moves: [],
-    },
-  ];
+const gameController = (() => {
+  let currentPlayer;
+  let players;
   // array of all winning moves sorted;
   const winningMoves = [
     [0, 1, 2],
@@ -155,20 +142,33 @@ const gameController = ((
     [6, 7, 8],
     [1, 4, 7],
     [2, 4, 6],
-    [2, 5, 7],
+    [2, 4, 7],
   ].sort();
 
   // Manually set the first player to be player one
-  // Implementing a coin toss/randomness function to dictate who goes first here is an idea.
-  let currentPlayer = players[0];
-
+  const initialisePlayers = (playerOne = "PlayerOne") => {
+    const players = [
+      {
+        name: playerOne === "" ? "PlayerOne" : playerOne,
+        entryValue: 1,
+        moves: [],
+      },
+      {
+        name: "PlayerTwo",
+        entryValue: 2,
+        moves: [],
+      },
+    ];
+    currentPlayer = players[0];
+    return players;
+  };
   const getCurrentPlayer = () => currentPlayer;
-
 
   // Runs a single move at a time
   const playMove = (move) => {
     currentPlayer.moves.push(screenController.toInt(move));
     currentPlayer.moves.sort();
+    console.log(currentPlayer.moves, "check moves");
     checkFinish();
     console.log(currentPlayer.moves, move, winningMoves);
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
@@ -177,28 +177,45 @@ const gameController = ((
   // checks if the game is finished as a win/loss or a draw
   const checkFinish = () => {
     if (currentPlayer.moves.length > 2) {
-        if (gameBoard.checkValidMoves().length === 0){
-            console.log("It's a draw!");
-            screenController.displayEnding("It's a draw!");
+      if (gameBoard.checkValidMoves().length === 0) {
+        console.log("It's a draw!");
+        screenController.displayEnding("It's a draw!");
+        // Display new game button or restart
+      }
+      console.log("checking", currentPlayer.name);
+      winningMoves.forEach((winningMove) => {
+        console.log(
+          winningMove,
+          currentPlayer.moves,
+          winningMove.every((move) => currentPlayer.moves.includes(move))
+        );
+        if (winningMove.every((move) => currentPlayer.moves.includes(move))) {
+          console.log(`WINNER ${currentPlayer.name}`);
+          screenController.displayEnding(`${currentPlayer.name} won!`);
+          // display new game button or restart
         }
-        console.log('checking', currentPlayer.name);
-        winningMoves.forEach((winningMove) => {
-            if(winningMove.every(move => currentPlayer.moves.includes(move))){
-                console.log(`WINNER ${currentPlayer.name}`);
-                screenController.displayEnding(`${currentPlayer.name} won!`);
-            }
-        })
-        console.log(gameBoard.checkValidMoves().length);
+      });
+      console.log(gameBoard.checkValidMoves().length);
     }
   };
 
+  // resetting the game
   const resetGame = () => {
-    // resetting the game
-  }
+    players.forEach((player) => {
+      player.moves = [];
+    });
+    currentPlayer = players[0];
+  };
+
+  const startGame = (playerOneName) => {
+    players = initialisePlayers(playerOneName);
+  };
 
   return {
     getCurrentPlayer,
     playMove,
+    resetGame,
+    startGame,
   };
 })();
 
@@ -209,12 +226,17 @@ const gameController = ((
 
 const screenController = (() => {
   let board = gameBoard.getBoard();
-  const boardGrid = document.querySelector(".game-board");
+  const boardGrid = document.createElement("div");
+  boardGrid.className = "game-board";
   const restartButton = document.querySelector("#restart");
   const main = document.querySelector("main");
   const turnMessage = document.createElement("p");
+  const endingMessage = document.querySelector(".ending-message");
+  const startButton = document.querySelector("#begin-button");
+  const nameInputArea = document.querySelector(".name-input");
+  const newGameButton = document.querySelector("#new-game");
   main.appendChild(turnMessage);
-  const endingMessage = document.querySelector('.ending-message');
+  main.appendChild(endingMessage);
 
   const getEntry = (value) => {
     return value === 0 ? "" : toEntry(value);
@@ -240,11 +262,18 @@ const screenController = (() => {
     }'s turn.`;
   };
 
-  makeBoard();
+  startButton.addEventListener("click", () => {
+    gameController.startGame(document.getElementById("player-name").value);
+    makeBoard();
+    boardGrid.addEventListener("click", handleGridClick);
+    main.appendChild(boardGrid);
+    nameInputArea.setAttribute("class", "name-input on");
+    restartButton.setAttribute("class", "showing");
+  });
 
   const toInt = (value) => {
-    return value == 0 ? 0 : (parseInt(value) || value);
-  }
+    return value == 0 ? 0 : parseInt(value) || value;
+  };
 
   const handleGridClick = (e) => {
     const place = e.target.dataset.place;
@@ -255,8 +284,7 @@ const screenController = (() => {
       gameBoard.addEntry(place, gameController.getCurrentPlayer().entryValue);
       gameController.playMove(place);
       makeBoard();
-    }
-    else {
+    } else {
       alert("This is not a valid input!");
     }
     // Functionality here what happens after button press
@@ -264,25 +292,38 @@ const screenController = (() => {
 
   // handling when the restart button is pressed
   const handleRestart = (e) => {
+    gameController.resetGame();
     gameBoard.createBoard();
     board = gameBoard.getBoard();
     makeBoard();
+    boardGrid.addEventListener("click", handleGridClick);
   };
-  boardGrid.addEventListener("click", handleGridClick);
+
+
   restartButton.addEventListener("click", handleRestart);
 
   const displayEnding = (message) => {
     endingMessage.textContent = message;
-    endingMessage.setAttribute('class', 'ending-message on');
+    endingMessage.setAttribute("class", "ending-message on");
+    newGameButton.setAttribute("class", "showing");
+    boardGrid.removeEventListener("click", handleGridClick);
     setTimeout(() => {
-        endingMessage.setAttribute('class', 'ending-message');  
-        endingMessage.textContent = "";
-    }, 4000)
-  }
+      endingMessage.setAttribute("class", "ending-message");
+      endingMessage.textContent = "";
+    }, 4000);
+  };
+
+  newGameButton.addEventListener("click", () => {
+    boardGrid.remove();
+    handleRestart();
+    restartButton.setAttribute("class", "showing on");
+    nameInputArea.setAttribute("class", "name-input");
+    newGameButton.setAttribute("class", "showing on");
+  });
 
   return {
     makeBoard,
     toInt,
-    displayEnding
+    displayEnding,
   };
 })();

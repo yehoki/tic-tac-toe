@@ -4,7 +4,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    outline: 1px solid black;
+    /* outline: 1px solid black; */
+    background-color: beige;
     font-family: 'Courier New', Courier, monospace;
 }
 
@@ -13,10 +14,16 @@ body {
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    justify-content: center;
 }
 
 header {
+    display: flex;
+    flex: 1;
     text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
 }
 
 main {
@@ -24,7 +31,35 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     text-align: center;
+    gap: 4rem;
+}
+
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.name-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.name-input.on {
+    display: none;
+}
+
+.showing {
+    display:flex;
+}
+
+.showing.on {
+    display: none;
 }
 
 .game-board {
@@ -32,11 +67,24 @@ main {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     align-items: center;
-    padding: 6rem;
+    padding: 4rem;
+    border: 1px solid black;
+    background-color: aquamarine;
+    gap: 1rem;
 }
 
 .entry {
-    min-height: 100px;
+    min-height: min(100px, 15dvh);
+    min-width: min(150px, 20dvw);
+    background: transparent;
+    border: 1px solid;
+    font-size: 2rem;
+    font-weight: 900;
+}
+
+.entry:hover,
+.entry:active {
+    background-color: yellowgreen;
 }
 
 
@@ -45,7 +93,7 @@ main {
 }
 
 .ending-message.on {
-    display: flex;
+    display:flex;
 }
 
 footer {   
