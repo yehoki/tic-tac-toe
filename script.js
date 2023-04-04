@@ -12,7 +12,7 @@ and in turn which creates event listeners, dictates who's turn it is and so on.
 */
 
 //------------------------------------------------------------------------------------------------------
-// players factory
+// Players factory
 //------------------------------------------------------------------------------------------------------
 
 const Person = (name) => {
@@ -21,21 +21,30 @@ const Person = (name) => {
 };
 
 //------------------------------------------------------------------------------------------------------
-// entry factory - represents each entry that we add to the grid
+// Entry factory - represents each entry that we add to the grid
 //------------------------------------------------------------------------------------------------------
 
 const entry = () => {
   let value = 0;
+  let place;
 
   const addValue = (player) => {
     value = player;
   };
+
+  const assignPlace = (gridPlaceRow, gridPlaceCol) => {
+    place = 3 * gridPlaceRow + gridPlaceCol;
+  };
+
+  const getPlace = () => place;
 
   const getValue = () => value;
 
   return {
     getValue,
     addValue,
+    assignPlace,
+    getPlace,
   };
 };
 
@@ -56,22 +65,47 @@ const gameBoard = (() => {
         board[i].push(entry());
       }
     }
+    board.map((row, rowIndex) =>
+      row.map((cell, cellIndex) => cell.assignPlace(rowIndex, cellIndex))
+    );
   };
   createBoard();
 
-  // Used to console log the board
+  // Used to console log the board for sanity checks
   const printBoard = () => {
     const printed = board.map((row) => row.map((cell) => cell.getValue()));
-    console.log(printed, "printed");
+  };
+  printBoard();
+
+  const toPlace = (rowIndex, colIndex) => rowIndex * 3 + colIndex;
+
+  const fromPlaceToBoard = (place) => {
+    if (place === 0) {
+      return [0, 0];
+    }
+    let row = 0;
+    let col = 0;
+    let calcPlace = place;
+    while (calcPlace > 0) {
+      if (calcPlace % 3 === 0) {
+        row += 1;
+        calcPlace = calcPlace -= 3;
+      } else {
+        col += 1;
+        calcPlace -= 1;
+      }
+    }
+    return [row, col];
   };
 
-  // returns an array of all valid moves in the form [column, row]
+
+  // returns an array of all valid moves in the form [column, row] --- refactor to make it as numbers instead of col,row
   const checkValidMoves = () => {
     const validMoves = [];
     board.forEach((row, rowIndex) =>
       row.forEach((col, colIndex) => {
         if (col.getValue() === 0) {
-          validMoves.push([rowIndex.toString(), colIndex.toString()]); // toString the numbers here since we are comparing strings later
+          validMoves.push(toPlace(rowIndex, colIndex).toString()); // toString the numbers here since we are comparing strings later
         }
       })
     );
@@ -80,13 +114,14 @@ const gameBoard = (() => {
 
   // Checks if the move is valid
   const isValidMove = (move) => {
-    const validMoves = JSON.stringify(checkValidMoves());
-    return validMoves.indexOf(JSON.stringify(move)) !== -1 ? true : false;
+    const validMoves = checkValidMoves();
+    return validMoves.indexOf(move) !== -1 ? true : false;
   };
 
   // add entry value to the board
   const addEntry = (move, entryValue) => {
-    board[move[0]][move[1]].addValue(entryValue);
+    const boardPlace = fromPlaceToBoard(move);
+    board[boardPlace[0]][boardPlace[1]].addValue(entryValue);
   };
 
   // retrieving the board itself
@@ -98,12 +133,10 @@ const gameBoard = (() => {
     isValidMove,
     addEntry,
     createBoard,
+    toPlace,
   };
 })();
 
-gameBoard.printBoard();
-
-console.log(gameBoard.isValidMove([0, 2]), "check moveeee");
 
 //------------------------------------------------------------------------------------------------------
 // gameController module
@@ -117,12 +150,26 @@ const gameController = ((
     {
       name: playerOne,
       entryValue: 1,
+      moves: [],
     },
     {
       name: playerTwo,
       entryValue: 2,
+      moves: [],
     },
   ];
+  // array of all winning moves sorted;
+  const winningMoves = [
+    [0, 1, 2],
+    [0, 4, 8],
+    [0, 3, 6],
+    [3, 4, 5],
+    [6, 7, 8],
+    [1, 4, 7],
+    [2, 4, 6],
+    [2, 5, 7],
+  ].sort();
+
 
   // Manually set the first player to be player one
   // Implementing a coin toss/randomness function to dictate who goes first here is an idea.
@@ -131,16 +178,31 @@ const gameController = ((
   const getCurrentPlayer = () => currentPlayer;
 
   // When run, checks which player it is, and switches to the other player in the game
-  const switchTurn = () => {
+
+  // plays
+  const playMove = (move) => {
+    currentPlayer.moves.push(screenController.toInt(move));
+    currentPlayer.moves.sort();
+    checkFinish();
+    console.log(currentPlayer.moves, move, winningMoves);
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
   };
 
-  // makes a new round
-  const makeNewRound = () => {};
+  // checks if win condition met
+  const checkFinish = () => {
+    if (currentPlayer.moves.length > 2) {
+        console.log('checking', currentPlayer.name);
+        winningMoves.forEach((winningMove) => {
+            if(winningMove.every(move => currentPlayer.moves.includes(move))){
+                console.log('WINNER');
+            }
+        })
+    }
+  };
 
   return {
     getCurrentPlayer,
-    switchTurn,
+    playMove,
   };
 })();
 
@@ -171,11 +233,9 @@ const screenController = (() => {
       row.forEach((col, colIndex) => {
         const entryButton = document.createElement("button");
         entryButton.classList.add("entry");
-        entryButton.dataset.row = rowIndex;
-        entryButton.dataset.column = colIndex;
+        entryButton.dataset.place = gameBoard.toPlace(rowIndex, colIndex);
         entryButton.textContent = getEntry(col.getValue());
         boardGrid.appendChild(entryButton);
-        console.log(col.getValue(), col.getValue() === 0);
       });
     });
     turnMessage.textContent = `It is ${
@@ -185,24 +245,25 @@ const screenController = (() => {
 
   makeBoard();
 
-  const handleGridClick = (e) => {
-    const rowIndex = e.target.dataset.row;
-    const colIndex = e.target.dataset.column;
+  const toInt = (value) => {
+    return value == 0 ? 0 : (parseInt(value) || value);
+  }
 
-    if (!rowIndex || !colIndex) return;
-    if (gameBoard.isValidMove([rowIndex, colIndex])) {
-      console.log(gameController.getCurrentPlayer());
-      gameBoard.addEntry(
-        [rowIndex, colIndex],
-        gameController.getCurrentPlayer().entryValue
-      );
-      gameController.switchTurn();
+
+  const handleGridClick = (e) => {
+    const place = e.target.dataset.place;
+
+    if (!place) return;
+    if (gameBoard.isValidMove(place)) {
+      gameBoard.addEntry(place, gameController.getCurrentPlayer().entryValue);
+      gameController.playMove(place);
       makeBoard();
       // change the value on the button;
-    } else {
+    }
+    else {
       alert("This is not a valid input!");
     }
-    //Functionality here what happens after button press
+    // Functionality here what happens after button press
   };
 
   // handling when the restart button is pressed
@@ -215,10 +276,8 @@ const screenController = (() => {
   boardGrid.addEventListener("click", handleGridClick);
   restartButton.addEventListener("click", handleRestart);
 
-  console.log(board, "screenControl");
-
   return {
     makeBoard,
+    toInt,
   };
 })();
-
