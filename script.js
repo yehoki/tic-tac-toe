@@ -46,9 +46,10 @@ const entry = () => {
 const gameBoard = (() => {
   const rows = 3;
   const cols = 3;
-  const board = [];
+  let board = [];
   // create the gameboard as a 2d array of 0's to begin with
   const createBoard = () => {
+    board = [];
     for (let i = 0; i < rows; i++) {
       board[i] = [];
       for (let j = 0; j < cols; j++) {
@@ -149,7 +150,7 @@ const gameController = ((
 //------------------------------------------------------------------------------------------------------
 
 const screenController = (() => {
-  const board = gameBoard.getBoard();
+  let board = gameBoard.getBoard();
   const boardGrid = document.querySelector(".game-board");
   const restartButton = document.querySelector("#restart");
   const main = document.querySelector("main");
@@ -182,6 +183,8 @@ const screenController = (() => {
     }'s turn.`;
   };
 
+  makeBoard();
+
   const handleGridClick = (e) => {
     const rowIndex = e.target.dataset.row;
     const colIndex = e.target.dataset.column;
@@ -205,6 +208,8 @@ const screenController = (() => {
   // handling when the restart button is pressed
   const handleRestart = (e) => {
     gameBoard.createBoard();
+    board = gameBoard.getBoard();
+    makeBoard();
   };
 
   boardGrid.addEventListener("click", handleGridClick);
@@ -217,4 +222,3 @@ const screenController = (() => {
   };
 })();
 
-screenController.makeBoard();
