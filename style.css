@@ -39,6 +39,15 @@ main {
     min-height: 100px;
 }
 
+
+.ending-message {
+    display: none;
+}
+
+.ending-message.on {
+    display: flex;
+}
+
 footer {   
     min-height: 50px;
     display: flex;
